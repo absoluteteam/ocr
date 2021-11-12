@@ -28,8 +28,8 @@ def emnist_model(labels_num=None):
     model.add(Flatten())
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='softmax'))
-    model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model.add(Dense(labels_num, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
     return model
 
 def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
@@ -42,7 +42,7 @@ def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
               #validation_data=(X_test, y_test_cat),
               #callbacks=[learning_rate_reduction],
               #batch_size=64,
-              #epochs=9
+              epochs=50
               )
     print("Training done, dT:", time.time() - t_start)
     return model
@@ -189,20 +189,27 @@ if len(sys.argv) == 1:
     chars = os.listdir('Cyrillic')
     for i in chars:
         for t, j in enumerate(os.listdir(f'Cyrillic/{i}')):
-            if (0 <= ord(i) - ord('А') <= 31):
-                y_train.append((ord(i) - ord('А')) / 31.0)
+            if (0 <= (ord(i) - ord('А')) <= 31):
+                temp = list()
+                for k in range(32):
+                    #print(k,(ord(i) - ord('А')))
+                    if k == (ord(i) - ord('А')):
+                        temp.append(1.0)
+                    else:
+                        temp.append(0.0)
+                y_train.append(np.array(temp))
                 X_train.append(np.array(load_image_as_gray(f'Cyrillic/{i}/{j}')))
-                if (t > 20):
+                if (t > 40):
                     break
     # print(X_train[0])
-    # print(y_train)
+    print(y_train)
 
     X_train = np.reshape(np.array(X_train), (np.array(X_train).shape[0], 28, 28, 1))
     X_train = X_train.astype(np.float32)
     X_train /= 255.0
     # print(X_train)
     y_train = np.array(y_train)
-    print(y_train)
+    #print(y_train)
 
     try:
         model = keras.models.load_model('model')
@@ -215,7 +222,14 @@ else:
     lttrs = letters_extract(sys.argv[1], 28)
     for i in lttrs:
         model = keras.models.load_model('model')
-        ans = model.predict(lttrs[i][2])
+        plt.imshow(i[2])
+        plt.show()
+        symb = np.array([i[2]]).reshape((1,28,28,1))
+        symb = symb.astype(np.float32)
+        symb /= 255.0
+        #print(symb)
+
+        ans = model.predict(symb)
         print(ans)
 
 
