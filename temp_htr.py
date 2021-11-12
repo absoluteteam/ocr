@@ -26,8 +26,8 @@ def emnist_model(labels_num=None):
     model.add(Flatten())
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(labels_num, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model.add(Dense(1, activation='softmax'))
+    model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
     return model
 
 def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
@@ -39,7 +39,9 @@ def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
     model.fit(X_train, y_train_cat,
               #validation_data=(X_test, y_test_cat),
               #callbacks=[learning_rate_reduction],
-              batch_size=64, epochs=9)
+              #batch_size=64,
+              #epochs=9
+              )
     print("Training done, dT:", time.time() - t_start)
     return model
 
@@ -143,7 +145,40 @@ for lett in os.listdir("Cyrillic/"):
       rgb_img.save(f"Cyrillic/{lett}/"+l)
 
 '''
+# разбитие строки на отдельные буквы
+def letters_extract(image_file: str, out_size=28):
+    img = cv2.imread(image_file)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+    img_erode = cv2.erode(thresh, np.ones((3, 3), np.uint8), iterations=1)
 
+    # Get contours
+    contours, hierarchy = cv2.findContours(img_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+    output = img.copy()
+
+    letters = []
+    for idx, contour in enumerate(contours):
+        (x, y, w, h) = cv2.boundingRect(contour)
+        if hierarchy[0][idx][3] == 0:
+            cv2.rectangle(output, (x, y), (x + w, y + h), (70, 0, 0), 1)
+            letter_crop = gray[y:y + h, x:x + w]
+            size_max = max(w, h)
+            letter_square = 255 * np.ones(shape=[size_max, size_max], dtype=np.uint8)
+            if w > h:
+                y_pos = size_max//2 - h//2
+                letter_square[y_pos:y_pos + h, 0:w] = letter_crop
+            elif w < h:
+                x_pos = size_max//2 - w//2
+                letter_square[0:h, x_pos:x_pos + w] = letter_crop
+            else:
+                letter_square = letter_crop
+
+            letters.append((x, w, cv2.resize(letter_square, (out_size, out_size), interpolation=cv2.INTER_AREA)))
+
+    # Sort array in place by X-coordinate
+    letters.sort(key=lambda x: x[0], reverse=False)
+    return letters
 
 X_train = list()
 y_train = list()
@@ -151,17 +186,18 @@ chars = os.listdir('Cyrillic')
 for i in chars:
     for t,j in enumerate(os.listdir(f'Cyrillic/{i}')):
         if(0 <= ord(i)-ord('А') <= 31):
-            y_train.append(ord(i)-ord('А'))
-            X_train.append(np.array(load_image(f'Cyrillic/{i}/{j}')))
+            y_train.append((ord(i)-ord('А'))/31.0)
+            X_train.append(np.array(load_image_as_gray(f'Cyrillic/{i}/{j}')))
             if(t> 20):
                 break
-print(X_train[0])
-print(y_train)
+#print(X_train[0])
+#print(y_train)
 X_train = np.reshape(np.array(X_train), (np.array(X_train).shape[0], 28, 28, 1))
 X_train = X_train.astype(np.float32)
 X_train /= 255.0
-print(X_train)
+#print(X_train)
 y_train = np.array(y_train)
+print(y_train)
 
 model = emnist_model(32)
 model = emnist_train(model, X_train, y_train)
