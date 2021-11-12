@@ -1,6 +1,5 @@
 import os
 import sys
-
 import cv2
 import time
 from tqdm import tqdm
@@ -32,7 +31,7 @@ def emnist_model(labels_num=None):
     model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
     return model
 
-def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
+def emnist_train(model, X_train, y_train_cat,epochs = 1, X_test=None, y_test_cat=None):
     t_start = time.time()
     # Set a learning rate reduction
     learning_rate_reduction = keras.callbacks.ReduceLROnPlateau(monitor='val_acc', patience=3, verbose=1, factor=0.5, min_lr=0.00001)
@@ -42,7 +41,7 @@ def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
               #validation_data=(X_test, y_test_cat),
               #callbacks=[learning_rate_reduction],
               #batch_size=64,
-              epochs=1
+              epochs=epochs
               )
     print("Training done, dT:", time.time() - t_start)
     return model
@@ -182,7 +181,13 @@ def letters_extract(image_file: str, out_size=28):
     letters.sort(key=lambda x: x[0], reverse=False)
     return letters
 
-if len(sys.argv) == 1:
+if len(sys.argv) != 2:
+    exit(0)
+try:
+    epochs = int(sys.argv[1])
+except Exception:
+    epochs = -1
+if epochs != -1:
     # train model
     X_train = list()
     y_train = list()
@@ -215,7 +220,7 @@ if len(sys.argv) == 1:
         model = keras.models.load_model('model')
     except Exception:
         model = emnist_model(32)
-    model = emnist_train(model, X_train, y_train)
+    model = emnist_train(model, X_train, y_train,epochs)
     model.save('model')
 else:
     print(sys.argv[1])
