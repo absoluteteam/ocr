@@ -1,4 +1,6 @@
 import os
+import sys
+
 import cv2
 import time
 from tqdm import tqdm
@@ -180,25 +182,42 @@ def letters_extract(image_file: str, out_size=28):
     letters.sort(key=lambda x: x[0], reverse=False)
     return letters
 
-X_train = list()
-y_train = list()
-chars = os.listdir('Cyrillic')
-for i in chars:
-    for t,j in enumerate(os.listdir(f'Cyrillic/{i}')):
-        if(0 <= ord(i)-ord('А') <= 31):
-            y_train.append((ord(i)-ord('А'))/31.0)
-            X_train.append(np.array(load_image_as_gray(f'Cyrillic/{i}/{j}')))
-            if(t> 20):
-                break
-#print(X_train[0])
-#print(y_train)
-X_train = np.reshape(np.array(X_train), (np.array(X_train).shape[0], 28, 28, 1))
-X_train = X_train.astype(np.float32)
-X_train /= 255.0
-#print(X_train)
-y_train = np.array(y_train)
-print(y_train)
+if len(sys.argv) == 1:
+    # train model
+    X_train = list()
+    y_train = list()
+    chars = os.listdir('Cyrillic')
+    for i in chars:
+        for t, j in enumerate(os.listdir(f'Cyrillic/{i}')):
+            if (0 <= ord(i) - ord('А') <= 31):
+                y_train.append((ord(i) - ord('А')) / 31.0)
+                X_train.append(np.array(load_image_as_gray(f'Cyrillic/{i}/{j}')))
+                if (t > 20):
+                    break
+    # print(X_train[0])
+    # print(y_train)
 
-model = emnist_model(32)
-model = emnist_train(model, X_train, y_train)
+    X_train = np.reshape(np.array(X_train), (np.array(X_train).shape[0], 28, 28, 1))
+    X_train = X_train.astype(np.float32)
+    X_train /= 255.0
+    # print(X_train)
+    y_train = np.array(y_train)
+    print(y_train)
+
+    try:
+        model = keras.models.load_model('model')
+    except Exception:
+        model = emnist_model(32)
+    model = emnist_train(model, X_train, y_train)
+    model.save('model')
+else:
+    print(sys.argv[1])
+    lttrs = letters_extract(sys.argv[1], 28)
+    for i in lttrs:
+        model = keras.models.load_model('model')
+        ans = model.predict(lttrs[i][2])
+        print(ans)
+
+
+
 
