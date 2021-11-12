@@ -42,7 +42,7 @@ def emnist_train(model, X_train, y_train_cat, X_test=None, y_test_cat=None):
               #validation_data=(X_test, y_test_cat),
               #callbacks=[learning_rate_reduction],
               #batch_size=64,
-              epochs=50
+              epochs=1
               )
     print("Training done, dT:", time.time() - t_start)
     return model
