@@ -222,15 +222,22 @@ else:
     lttrs = letters_extract(sys.argv[1], 28)
     for i in lttrs:
         model = keras.models.load_model('model')
-        plt.imshow(i[2])
-        plt.show()
+        #plt.imshow(i[2])
+       # plt.show()
         symb = np.array([i[2]]).reshape((1,28,28,1))
         symb = symb.astype(np.float32)
         symb /= 255.0
         #print(symb)
 
         ans = model.predict(symb)
-        print(ans)
+        index = 0
+        mx = ans[0][0]
+        for i in range(32):
+            if ans[0][i] > mx:
+                mx = ans[0][i]
+                index = i
+
+        print(chr(index + ord('А')),mx)
 
 
 
