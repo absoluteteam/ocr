@@ -5,9 +5,6 @@ import time
 from tqdm import tqdm
 from PIL import Image, ImageFilter, ImageOps
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from sklearn.model_selection import train_test_split
 
 from tensorflow import keras
 from keras.models import Sequential
@@ -40,7 +37,7 @@ def emnist_train(model, X_train, y_train_cat,epochs = 1, X_test=None, y_test_cat
     model.fit(X_train, y_train_cat,
               #validation_data=(X_test, y_test_cat),
               #callbacks=[learning_rate_reduction],
-              #batch_size=64,
+              batch_size=64,
               epochs=epochs
               )
     print("Training done, dT:", time.time() - t_start)
@@ -204,8 +201,8 @@ if epochs != -1:
                         temp.append(0.0)
                 y_train.append(np.array(temp))
                 X_train.append(np.array(load_image_as_gray(f'Cyrillic/{i}/{j}')))
-                if (t > 40):
-                    break
+                #if (t > 40):
+                    #break
     # print(X_train[0])
     print(y_train)
 
