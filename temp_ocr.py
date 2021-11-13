@@ -54,6 +54,12 @@ def extract_text():
     s = pytesseract.image_to_string('cropped.png', lang='rus')
     return s
 
+def whitespace_and_newline_stripper(s):
+    for i in range(100):
+        s = s.replace('  ','')
+        s = s.replace('\n\n','')
+    return s
+
 out = sys.argv[2]
 pytesseract.pytesseract.tesseract_cmd = r'C:\Users\User\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 # Получение координат левой метки
@@ -63,4 +69,4 @@ right_match = find_match_location(sys.argv[1], 'target2.PNG')
 crop_image(sys.argv[1], (left_match, right_match))
 # Вывод результатов
 with open(out,mode='w+') as f:
-    f.write(extract_text())
+    f.write(whitespace_and_newline_stripper(extract_text()))
