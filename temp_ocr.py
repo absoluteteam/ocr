@@ -61,7 +61,6 @@ def whitespace_and_newline_stripper(s):
     return s
 
 out = sys.argv[2]
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\User\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 # Получение координат левой метки
 left_match = find_match_location(sys.argv[1], 'target.PNG')
 # Получение координат правой метки
